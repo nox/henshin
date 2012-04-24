@@ -1,0 +1,12 @@
+{application, henshin, [
+    {description,
+        "A code transformation toolkit abusing some forgotten Erlang syntax."},
+    {vsn, git},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib,
+        syntax_tools,
+        parse_trans
+    ]}
+]}.
