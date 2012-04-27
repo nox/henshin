@@ -1,4 +1,4 @@
--module(henshin).
+-module(henshin_module).
 
 -include_lib("parse_trans/include/codegen.hrl").
 -compile({no_auto_import, [error/2]}).
