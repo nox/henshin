@@ -37,7 +37,7 @@ and a call to `erl_syntax:concrete/1`. It also exports a new function
 Let `example` be the following module:
 
     -module(example).
-    -compile({parse_transform, henshin}).
+    -compile({parse_transform, henshin_module}).
 
     add(XAST, YAST) :-
         X <- XAST,
