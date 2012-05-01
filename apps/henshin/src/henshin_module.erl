@@ -4,48 +4,15 @@
 
 %% Interface
 
--export([called_modules/1, format_error/1, imports/1, parse_transform/2]).
+-export([format_error/1, parse_transform/2]).
+
 
 %% Implementation
-
-called_modules(Forms) ->
-    Modules = lists:flatmap(
-        fun (Form) ->
-            erl_syntax_lib:fold(
-                fun (Node, Calls) ->
-                    case erl_syntax:type(Node) of
-                        application ->
-                            case erl_syntax_lib:analyze_application(Node) of
-                                {Mod, _Fun} -> [Mod | Calls];
-                                _ -> Calls
-                            end;
-                        _ ->
-                            Calls
-                    end
-                end, [], Form)
-        end, Forms),
-    lists:usort(Modules).
 
 format_error(binary_generator) ->
     "binary generators illegal in henshin rules";
 format_error(parameterized_module) ->
     "parameterized modules are not supported by henshin".
-
-imports(Forms) ->
-    lists:flatmap(
-        fun (Form) ->
-            case erl_syntax:type(Form) of
-                attribute ->
-                    case erl_syntax_lib:analyze_attribute(Form) of
-                        {import, {Mod, FAs}} ->
-                            [ {Mod, {F, A}} || {F, A} <- FAs ];
-                        _ ->
-                            []
-                    end;
-                _ ->
-                    []
-            end
-        end, Forms).
 
 parse_transform(Forms, _CompileOpts) ->
     {LastFileForm, _ModName, BeforeModForms, AfterModForms, ModErrors} =
