@@ -122,6 +122,7 @@ transform_generator(Gen) ->
     % erl_syntax:set_pos/1 does not seem to work on erl_parse terms, so Call
     % need to be reconstructed into an erl_syntax term for the position to be
     % set correctly.
+    % See https://github.com/richcarl/syntax_tools/commit/554e2f
     erl_syntax:copy_pos(
         Gen,
         erl_syntax:match_expr(
