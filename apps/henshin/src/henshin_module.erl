@@ -1,7 +1,6 @@
 -module(henshin_module).
 
 -include_lib("parse_trans/include/codegen.hrl").
--compile({no_auto_import, [error/2]}).
 
 %% Interface
 
@@ -68,11 +67,6 @@ parse_transform(Forms, _CompileOpts) ->
         ++ [LastFileForm2]
         ++ TransformedForms.
 
-%% Error reporting
-
-error(Reason, Line) ->
-    {error, {Line, ?MODULE, Reason}}.
-
 %% Internal
 
 analyze_module(Rules) ->
@@ -84,8 +78,9 @@ analyze_module(Forms = [Form | Rest], File, ModName, Before) ->
             case erl_syntax_lib:analyze_attribute(Form) of
                 {module, {Name, _Args}} ->
                     Line = erl_syntax:get_pos(Form),
-                    Errors = [error(parameterized_module, Line)],
-                    {File, Name, lists:reverse(Before, [Form]), Rest, Errors};
+                    Error = henshin_lib:error(
+                        {?MODULE, parameterized_module}, Line),
+                    {File, Name, lists:reverse(Before, [Form]), Rest, [Error]};
                 {module, Name} ->
                     {File, Name, lists:reverse(Before, [Form]), Rest, []};
                 {file, _} ->
@@ -198,7 +193,9 @@ transform_rule_clauses(Clauses) ->
                         binary_generator ->
                             Line = erl_syntax:get_pos(Expr),
                             Match = transform_binary_generator(Expr),
-                            {Match, [error(binary_generator, Line) | Errors3]};
+                            Error = henshin_lib:error(
+                                {?MODULE, binary_generator}, Line),
+                            {Match, [Error | Errors3]};
                         generator ->
                             {transform_generator(Expr), Errors3};
                         _ ->
