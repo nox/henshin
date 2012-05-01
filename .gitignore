@@ -1,3 +1,5 @@
 /apps/*/ebin/*.app
 /deps/
+/.henshin_dialyzer.plt
+
 *.beam
