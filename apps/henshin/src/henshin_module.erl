@@ -5,15 +5,20 @@
 %% Interface
 
 -export([format_error/1, parse_transform/2]).
+-export_type([error/0]).
 
+-type error() :: binary_generator | parameterized_module.
 
 %% Implementation
 
+-spec format_error(error()) -> string().
 format_error(binary_generator) ->
     "binary generators illegal in henshin rules";
 format_error(parameterized_module) ->
     "parameterized modules are not supported by henshin".
 
+-spec parse_transform(henshin_lib:module_forms(), [compile:option()]) ->
+    henshin_lib:module_forms().
 parse_transform(Forms, _CompileOpts) ->
     {LastFileForm, _ModName, BeforeModForms, AfterModForms, ModErrors} =
         analyze_module(Forms),
