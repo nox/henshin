@@ -17,8 +17,8 @@ format_error(binary_generator) ->
 format_error(parameterized_module) ->
     "parameterized modules are not supported by henshin".
 
--spec parse_transform(henshin_lib:module_forms(), [compile:option()]) ->
-    henshin_lib:module_forms().
+-spec parse_transform(erl_syntax:forms(), [compile:option()]) ->
+    erl_syntax:forms().
 parse_transform(Forms, _CompileOpts) ->
     {LastFileForm, _ModName, BeforeModForms, AfterModForms, ModErrors} =
         analyze_module(Forms),

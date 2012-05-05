@@ -30,27 +30,24 @@ format_error({undefined_module, M}) ->
 -spec parse_transform(erl_syntax:forms(), [compile:option()]) ->
         erl_syntax:forms().
 parse_transform(Forms, _CompileOpts) ->
-    Passes = [
-        fun forbid_rules_def/1,
-        fun apply_rules/1
-    ],
-    erl_syntax:revert_forms(henshin_lib:transform(Passes, Forms)).
+    erl_syntax:revert_forms(apply_rules(Forms)).
 
 %% Internal
 
--spec apply_rules(erl_syntax:forms()) ->
-        {continue, erl_syntax:forms()}.
+-spec apply_rules(erl_syntax:forms()) -> erl_syntax:forms().
 apply_rules(Forms) ->
     {Result, _} = lists:mapfoldl(
         fun (Form, Rules) ->
             case erl_syntax:type(Form) of
                 function ->
                     apply_rules(Form, Rules);
+                rule ->
+                    {[add_error(defined_rule, Form, [])], Rules};
                 _ ->
                     {[Form], Rules}
             end
         end, [], Forms),
-    {continue, lists:flatten(Result)}.
+    lists:flatten(Result).
 
 -spec apply_rules(term(), rules()) ->
         {term(), rules()}.
@@ -163,17 +160,6 @@ is_expr(Term) ->
         {'EXIT', _} -> false;
         _ -> true
     end.
-
--spec forbid_rules_def(erl_syntax:forms()) ->
-    {continue | stop, erl_syntax:forms()}.
-forbid_rules_def(Forms) ->
-    lists:foldr(
-        fun (Form, {Action, Fs}) ->
-            case erl_syntax:type(Form) of
-                rule -> {stop, add_error(defined_rule, Form, Fs)};
-                _ -> {Action, [Form | Fs]}
-            end
-        end, {continue, []}, Forms).
 
 %% Error handling
 
