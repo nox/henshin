@@ -24,4 +24,4 @@ $(PLT):
 
 .PHONY: dialyze
 dialyze: $(PLT) compile
-	-@$(DIALYZER) --plt $(PLT) apps/*/ebin
+	-@$(DIALYZER) --plt $(PLT) ebin
