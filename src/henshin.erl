@@ -40,7 +40,9 @@ apply_rules(Forms) ->
         fun (Form, Rules) ->
             case erl_syntax:type(Form) of
                 function ->
-                    apply_rules(Form, Rules);
+                    apply_rules(
+                        erl_syntax_lib:annotate_bindings(Form, ordsets:new()),
+                        Rules);
                 rule ->
                     Marker = henshin_lib:marker(
                         error, ?MODULE, defined_rule, Form),
