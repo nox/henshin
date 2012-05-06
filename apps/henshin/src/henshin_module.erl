@@ -49,9 +49,8 @@ analyze_module(Forms = [Form | Rest], File, ModName, Before) ->
         attribute ->
             case erl_syntax_lib:analyze_attribute(Form) of
                 {module, {Name, _Args}} ->
-                    Line = erl_syntax:get_pos(Form),
-                    Error = henshin_lib:error(
-                        {?MODULE, parameterized_module}, Line),
+                    Error = henshin_lib:marker(
+                        error, ?MODULE, parameterized_module, Form),
                     {File, Name, lists:reverse(Before, [Form]), Rest, [Error]};
                 {module, Name} ->
                     {File, Name, lists:reverse(Before, [Form]), Rest, []};
@@ -164,10 +163,9 @@ transform_rule_clauses(Clauses) ->
                 fun (Expr, Errors3) ->
                     case erl_syntax:type(Expr) of
                         binary_generator ->
-                            Line = erl_syntax:get_pos(Expr),
                             Match = transform_binary_generator(Expr),
-                            Error = henshin_lib:error(
-                                {?MODULE, binary_generator}, Line),
+                            Error = henshin_lib:marker(
+                                error, ?MODULE, binary_generator, Expr),
                             {Match, [Error | Errors3]};
                         generator ->
                             {transform_generator(Expr), Errors3};

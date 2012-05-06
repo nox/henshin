@@ -42,7 +42,9 @@ apply_rules(Forms) ->
                 function ->
                     apply_rules(Form, Rules);
                 rule ->
-                    {[add_error(defined_rule, Form, [])], Rules};
+                    Marker = henshin_lib:marker(
+                        error, ?MODULE, defined_rule, Form),
+                    {[Marker], Rules};
                 _ ->
                     {[Form], Rules}
             end
@@ -52,11 +54,9 @@ apply_rules(Forms) ->
 -spec apply_rules(term(), rules()) ->
         {term(), rules()}.
 apply_rules(Form, Rules) ->
-    {Result, {Rules2, Errors}} = erl_syntax_lib:mapfold(
-        fun (Node, Acc2) ->
-            apply_rules_node(Node, Acc2)
-        end, {Rules, []}, Form),
-    {[Result | Errors], Rules2}.
+    {Result, {Rules2, Markers}} = erl_syntax_lib:mapfold(
+        fun apply_rules_node/2, {Rules, []}, Form),
+    {[Result | Markers], Rules2}.
 
 -spec apply_rules_node(
     erl_syntax:syntaxTree(), {rules(), erl_syntax:forms()}) ->
@@ -72,20 +72,22 @@ apply_rules_node(Node, Acc) ->
 -spec apply_rules_app(
     erl_syntax:syntaxTree(), {rules(), erl_syntax:forms()}) ->
         {erl_syntax:syntaxTree(), {rules(), erl_syntax:forms()}}.
-apply_rules_app(App, Acc = {Rules, Errors}) ->
+apply_rules_app(App, Acc = {Rules, Markers}) ->
     case erl_syntax_lib:analyze_application(App) of
         MFA = {M, {_F, _A}} ->
             case rule_exported(MFA, Rules) of
                 {true, Rules2} ->
-                    apply_rule(App, {Rules2, Errors}, MFA);
+                    apply_rule(App, {Rules2, Markers}, MFA);
                 {false, Rules2} ->
-                    {App, {Rules2, Errors}};
+                    {App, {Rules2, Markers}};
                 {ill_defined_rules, Rules2} ->
-                    Errors2 = add_error({ill_defined_rules, M}, App, Errors),
-                    {App, {Rules2, Errors2}};
+                    Marker = henshin_lib:marker(
+                        error, ?MODULE, {ill_defined_rules, M}, App),
+                    {App, {Rules2, [Marker | Markers]}};
                 {undefined_module, Rules2} ->
-                    Errors2 = add_warning({undefined_module, M}, App, Errors),
-                    {App, {Rules2, Errors2}}
+                    Marker = henshin_lib:marker(
+                        warning, ?MODULE, {undefined_module, M}, App),
+                    {App, {Rules2, [Marker | Markers]}}
             end;
         _ ->
             % @todo handle imported rules
@@ -139,18 +141,20 @@ call_henshin_rules({M, FA}, Rules) ->
     erl_syntax:syntaxTree(), {rules(), erl_syntax:forms()},
             {module(), {atom(), byte()}}) ->
         {erl_syntax:syntaxTree(), {rules(), erl_syntax:forms()}}.
-apply_rule(App, Acc = {Rules, Errors}, MFA = {M, {F, _A}}) ->
+apply_rule(App, Acc = {Rules, Markers}, MFA = {M, {F, _A}}) ->
     case catch apply(M, F, erl_syntax:application_arguments(App)) of
         {'EXIT', Reason} ->
-            {App, {Rules, add_error({rule_error, MFA, Reason}, App, Errors)}};
+            Marker = henshin_lib:marker(
+                error, ?MODULE, {rule_error, MFA, Reason}, App),
+            {App, {Rules, [Marker | Markers]}};
         Result ->
             case is_expr(Result) of
                 true ->
                     apply_rules_node(Result, Acc);
                 false ->
-                    Errors2 = add_error(
-                        {rule_badreturn, {MFA, Result}}, App, Errors),
-                    {App, {Rules, Errors2}}
+                    Marker = henshin_lib:marker(
+                        error, ?MODULE, {rule_badreturn, {MFA, Result}}, App),
+                    {App, {Rules, [Marker | Markers]}}
             end
     end.
 
@@ -160,23 +164,3 @@ is_expr(Term) ->
         {'EXIT', _} -> false;
         _ -> true
     end.
-
-%% Error handling
-
--spec add_error(error(), erl_syntax:syntaxTree(), [erl_syntax:syntaxTree()]) ->
-    [erl_syntax:syntaxTree(), ...].
-add_error(Error, Node, Forms) ->
-    add_marker(Error, Node, Forms, fun henshin_lib:error/2).
-
--spec add_warning(error(), erl_syntax:syntaxTree(), [erl_syntax:syntaxTree()]) ->
-    [erl_syntax:syntaxTree(), ...].
-add_warning(Error, Node, Forms) ->
-    add_marker(Error, Node, Forms, fun henshin_lib:warning/2).
-
--spec add_marker(
-    error(), erl_syntax:syntaxTree(), [erl_syntax:syntaxTree()],
-            fun(({module(), term()}, non_neg_integer()) ->
-                erl_parse:abstract_form())) ->
-        [erl_syntax:syntaxTree(), ...].
-add_marker(Error, Node, Forms, F) ->
-    [F({?MODULE, Error}, erl_syntax:get_pos(Node)) | Forms].
