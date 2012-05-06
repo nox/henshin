@@ -29,7 +29,7 @@ parse_transform(Forms, _CompileOpts) ->
     TransformedForms = transform_rules(Rest),
     []
         ++ BeforeModForms
-        ++ ModErrors
+        ++ erl_syntax:revert_forms(ModErrors)
         ++ [ThisFileForm]
         ++ [export_form([{henshin_rules, 0} | Rules], ?LINE)]
         ++ [LastFileForm]
@@ -154,7 +154,7 @@ transform_rule(Rule) ->
     Function = erl_syntax:copy_pos(
         Rule,
         erl_syntax:function(erl_syntax:rule_name(Rule), Clauses)),
-    {erl_syntax:revert(Function), Errors}.
+    {erl_syntax:revert(Function), erl_syntax:revert_forms(Errors)}.
 
 transform_rule_clauses(Clauses) ->
     lists:mapfoldr(
