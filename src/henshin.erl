@@ -53,11 +53,11 @@ apply_rules(Forms) ->
         end, [], Forms),
     lists:flatten(Result).
 
--spec apply_rules(term(), rules()) ->
-        {term(), rules()}.
-apply_rules(Form, Rules) ->
+-spec apply_rules(erl_syntax:syntaxTree(), rules()) ->
+    {erl_syntax:forms(), rules()}.
+apply_rules(Fun, Rules) ->
     {Result, {Rules2, Markers}} = erl_syntax_lib:mapfold(
-        fun apply_rules_node/2, {Rules, []}, Form),
+        fun apply_rules_node/2, {Rules, []}, Fun),
     {[Result | Markers], Rules2}.
 
 -spec apply_rules_node(
