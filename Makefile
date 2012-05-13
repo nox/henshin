@@ -9,6 +9,10 @@ all: compile
 compile:
 	@$(REBAR) compile
 
+.PHONY: clean
+clean:
+	@$(REBAR) clean
+
 .PHONY: deps
 deps:
 	@$(REBAR) get-deps
