@@ -27,7 +27,7 @@ dialyze: $(PLT) compile
 	@$(DIALYZER) --plt $(PLT) ebin
 
 .PHONY: test
-test: ct
+test: compile ct
 
 .PHONY: ct
 ct:
