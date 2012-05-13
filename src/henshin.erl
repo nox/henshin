@@ -15,7 +15,7 @@
 
 %% Implementation
 
--spec format_error(error()) -> nonempty_string().
+-spec format_error(error()) -> io_lib:chars().
 format_error(defined_rule) ->
     "henshin rules cannot be defined when applying them";
 format_error({ill_defined_rules, M}) ->

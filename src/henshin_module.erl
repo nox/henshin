@@ -11,7 +11,7 @@
 
 %% Implementation
 
--spec format_error(error()) -> string().
+-spec format_error(error()) -> io_lib:chars().
 format_error(binary_generator) ->
     "binary generators illegal in henshin rules";
 format_error(parameterized_module) ->
