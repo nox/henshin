@@ -3,17 +3,25 @@
 -include_lib("common_test/include/ct.hrl").
 
 -export([all/0]).
--export([forbid_pmod/1]).
+-export([bgen/1, forbid_pmod/1]).
 
 all() ->
-    [forbid_pmod].
+    [bgen, forbid_pmod].
+
+bgen(Config) ->
+    File = file(bgen, Config),
+    {error, [{File, [Error]}], []} = validate(File),
+    Error = {6, henshin_module, binary_generator}.
 
 forbid_pmod(Config) ->
     File = file(pmod, Config),
-    {error, [{File, [Error]}], []} = compile(File, [return_errors]),
+    {error, [{File, [Error]}], []} = validate(File),
     Error = {2, henshin_module, parameterized_module}.
 
 %% Internal
+
+validate(File) ->
+    compile(File, [strong_validation, return_errors]).
 
 compile(File, Options) ->
     compile:file(File, [verbose | Options]).
