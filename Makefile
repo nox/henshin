@@ -25,3 +25,10 @@ $(PLT):
 .PHONY: dialyze
 dialyze: $(PLT) compile
 	@$(DIALYZER) --plt $(PLT) ebin
+
+.PHONY: test
+test: ct
+
+.PHONY: ct
+ct:
+	@$(REBAR) ct skip_deps=true

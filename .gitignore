@@ -1,3 +1,5 @@
 /ebin/
 /deps/
+/logs/
+/test/*.ebin
 /.henshin_dialyzer.plt

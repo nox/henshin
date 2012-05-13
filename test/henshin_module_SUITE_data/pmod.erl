@@ -1,0 +1,3 @@
+-include("empty_include.hrl").
+-module(pmod, []).
+-compile({parse_transform, henshin_module}).
