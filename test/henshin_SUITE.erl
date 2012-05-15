@@ -1,21 +1,28 @@
--module(henshin_module_SUITE).
+-module(henshin_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
 
--export([all/0]).
--export([abstract/1, bgen/1, forbid_pmod/1]).
+-export([all/0, groups/0]).
+-export([call/1, answer/1]).
+-export([bgen/1, forbid_pmod/1]).
 
 all() ->
-    [abstract, bgen, forbid_pmod].
+    [{group, math}, bgen, forbid_pmod].
 
-abstract(Config) ->
-    {ok, henshin_math, []} = compile(file(henshin_math, Config), Config, []),
-    {module, henshin_math} = code:load_abs(
-        lists:concat([?config(priv_dir, Config), henshin_math])),
+groups() ->
+    [{math, [sequence], [call, answer]}].
+
+call(Config) ->
+    compile_and_load(henshin_math, Config),
+    [{add, 2}] = henshin_math:henshin_rules(),
     ThirtyNine = erl_parse:abstract(39),
     Three = erl_parse:abstract(3),
     FortyTwo = erl_parse:abstract(42),
     FortyTwo = henshin_math:add(ThirtyNine, Three).
+
+answer(Config) ->
+    compile_and_load(henshin_info, Config),
+    42 = henshin_info:trivia(answer).
 
 bgen(Config) ->
     File = file(bgen, Config),
@@ -32,9 +39,19 @@ forbid_pmod(Config) ->
 validate(File, Config) ->
     compile(File, Config, [strong_validation]).
 
+compile_and_load(Mod, Config) ->
+    {ok, Mod, []} = compile(file(Mod, Config), Config, []),
+    load(Mod, Config).
+
 compile(File, Config, Options) ->
     compile:file(File,
         [verbose, {outdir, ?config(priv_dir, Config)}, return | Options]).
+
+load(Mod, Config) ->
+    {module, Mod} = code:load_abs(
+        lists:concat([?config(priv_dir, Config), Mod])),
+    code:purge(Mod),
+    ok.
 
 file(Mod, Config) ->
     lists:concat([?config(data_dir, Config), Mod, ".erl"]).
