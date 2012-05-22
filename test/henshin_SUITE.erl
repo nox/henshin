@@ -4,10 +4,10 @@
 
 -export([all/0, groups/0]).
 -export([call/1, answer/1]).
--export([bgen/1, forbid_pmod/1]).
+-export([forbid_bgen/1, forbid_pmod/1]).
 
 all() ->
-    [{group, math}, bgen, forbid_pmod].
+    [{group, math}, forbid_bgen, forbid_pmod].
 
 groups() ->
     [{math, [sequence], [call, answer]}].
@@ -24,7 +24,7 @@ answer(Config) ->
     compile_and_load(henshin_info, Config),
     42 = henshin_info:trivia(answer).
 
-bgen(Config) ->
+forbid_bgen(Config) ->
     File = file(bgen, Config),
     {error, [{File, [Error]}], []} = validate(File, Config),
     {6, Mod, binary_generator} = Error,
