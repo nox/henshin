@@ -27,12 +27,14 @@ answer(Config) ->
 bgen(Config) ->
     File = file(bgen, Config),
     {error, [{File, [Error]}], []} = validate(File, Config),
-    Error = {6, henshin_module, binary_generator}.
+    {6, Mod, binary_generator} = Error,
+    true = io_lib:deep_char_list(Mod:format_error(binary_generator)).
 
 forbid_pmod(Config) ->
     File = file(pmod, Config),
     {error, [{File, [Error]}], []} = validate(File, Config),
-    Error = {2, henshin_module, parameterized_module}.
+    {2, Mod, parameterized_module} = Error,
+    true = io_lib:deep_char_list(Mod:format_error(parameterized_module)).
 
 %% Internal
 
